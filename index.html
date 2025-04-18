@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>M3U Player</title>
+  <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #111; color: #fff; }
+    h1 { text-align: center; }
+    .tabs { display: flex; justify-content: center; margin-bottom: 20px; }
+    .tabs button { margin: 0 10px; padding: 10px; cursor: pointer; background: #333; border: none; color: #fff; }
+    .tabs button.active { background: #555; }
+    .content { display: none; }
+    .content.active { display: block; }
+    .list { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 20px; }
+    .item { background: #222; padding: 10px; border-radius: 5px; cursor: pointer; }
+    .item:hover { background: #444; }
+  </style>
+</head>
+<body>
+
+<h1>M3U Playlist Player</h1>
+
+<div class="tabs">
+  <button class="tab-btn active" data-target="channels">Channels</button>
+  <button class="tab-btn" data-target="vod">VOD</button>
+  <button class="tab-btn" data-target="series">Series</button>
+</div>
+
+<video id="video-player" class="video-js vjs-default-skin" controls preload="auto" width="100%" height="400"></video>
+
+<div id="channels" class="content active">
+  <div class="list" id="channel-list"></div>
+</div>
+<div id="vod" class="content">
+  <div class="list" id="vod-list"></div>
+</div>
+<div id="series" class="content">
+  <div class="list" id="series-list"></div>
+</div>
+
+<script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+<script>
+  const M3U_URL = "https://raw.githubusercontent.com/Sarker5523/My-Playlists/refs/heads/main/playlist.m3u"; // Replace with your M3U URL
+  const player = videojs('video-player');
+
+  const tabs = document.querySelectorAll('.tab-btn');
+  const contents = document.querySelectorAll('.content');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      contents.forEach(c => c.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.target).classList.add('active');
+    });
+  });
+
+  async function fetchM3U() {
+    const res = await fetch(M3U_URL);
+    const text = await res.text();
+    parseM3U(text);
+  }
+
+  function parseM3U(data) {
+    const lines = data.split('\n');
+    let current = {};
+    const channels = [], vod = [], series = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].startsWith('#EXTINF')) {
+        const name = lines[i].split(',').pop();
+        current = { name };
+      } else if (lines[i] && lines[i].startsWith('http')) {
+        current.url = lines[i];
+        const lower = current.name.toLowerCase();
+        if (lower.includes('vod') || lower.includes('movie')) {
+          vod.push({ ...current });
+        } else if (lower.includes('series') || lower.includes('episode')) {
+          series.push({ ...current });
+        } else {
+          channels.push({ ...current });
+        }
+      }
+    }
+
+    populateList('channel-list', channels);
+    populateList('vod-list', vod);
+    populateList('series-list', series);
+  }
+
+  function populateList(id, items) {
+    const container = document.getElementById(id);
+    container.innerHTML = "";
+    items.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.textContent = item.name;
+      div.onclick = () => playStream(item.url);
+      container.appendChild(div);
+    });
+  }
+
+  function playStream(url) {
+    player.src({ type: 'application/x-mpegURL', src: url });
+    player.play();
+  }
+
+  fetchM3U();
+</script>
+
+</body>
+</html>
