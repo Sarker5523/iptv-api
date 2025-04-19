@@ -1,118 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Universal M3U Player</title>
-  <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+  <meta charset="UTF-8">
+  <title>Hanime M3U Downloader</title>
   <style>
-    body { background: #111; color: #fff; font-family: sans-serif; padding: 20px; }
-    h1 { text-align: center; }
-    .tabs { display: flex; justify-content: center; margin-bottom: 15px; }
-    .tabs button { margin: 0 10px; padding: 10px; background: #333; border: none; color: white; cursor: pointer; }
-    .tabs button.active { background: #555; }
-    .content { display: none; }
-    .content.active { display: block; }
-    .list { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
-    .item { background: #222; padding: 10px; border-radius: 5px; cursor: pointer; }
-    .item:hover { background: #444; }
+    body {
+      font-family: sans-serif;
+      background: #111;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    a.button {
+      display: inline-block;
+      padding: 12px 24px;
+      background-color: #e91e63;
+      color: white;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 16px;
+      transition: background 0.3s;
+    }
+    a.button:hover {
+      background-color: #c2185b;
+    }
   </style>
 </head>
 <body>
-
-<h1>M3U Playlist Universal Player</h1>
-
-<div class="tabs">
-  <button class="tab-btn active" data-target="channels">Channels</button>
-  <button class="tab-btn" data-target="vod">VOD</button>
-  <button class="tab-btn" data-target="series">Series</button>
-</div>
-
-<video id="video" controls crossorigin playsinline></video>
-
-<div id="channels" class="content active"><div class="list" id="channel-list"></div></div>
-<div id="vod" class="content"><div class="list" id="vod-list"></div></div>
-<div id="series" class="content"><div class="list" id="series-list"></div></div>
-
-<script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-<script>
-  const M3U_URL = "https://raw.githubusercontent.com/FunctionError/PiratesTv/main/combined_playlist.m3u"; // Replace with your M3U URL
-  const video = document.getElementById('video');
-  const player = new Plyr(video);
-
-  const tabs = document.querySelectorAll('.tab-btn');
-  const contents = document.querySelectorAll('.content');
-
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('active'));
-      contents.forEach(c => c.classList.remove('active'));
-      tab.classList.add('active');
-      document.getElementById(tab.dataset.target).classList.add('active');
-    });
-  });
-
-  async function fetchM3U() {
-    const res = await fetch(M3U_URL);
-    const text = await res.text();
-    parseM3U(text);
-  }
-
-  function parseM3U(data) {
-    const lines = data.split('\n');
-    let current = {};
-    const channels = [], vod = [], series = [];
-
-    for (let i = 0; i < lines.length; i++) {
-      if (lines[i].startsWith('#EXTINF')) {
-        const name = lines[i].split(',').pop();
-        current = { name };
-      } else if (lines[i] && lines[i].startsWith('http')) {
-        current.url = lines[i];
-        const lower = current.name.toLowerCase();
-        if (lower.includes('vod') || lower.includes('movie')) {
-          vod.push({ ...current });
-        } else if (lower.includes('series') || lower.includes('episode')) {
-          series.push({ ...current });
-        } else {
-          channels.push({ ...current });
-        }
-      }
-    }
-
-    populateList('channel-list', channels);
-    populateList('vod-list', vod);
-    populateList('series-list', series);
-  }
-
-  function populateList(id, items) {
-    const container = document.getElementById(id);
-    container.innerHTML = "";
-    items.forEach(item => {
-      const div = document.createElement('div');
-      div.className = 'item';
-      div.textContent = item.name;
-      div.onclick = () => playMedia(item.url);
-      container.appendChild(div);
-    });
-  }
-
-  function playMedia(url) {
-    if (Hls.isSupported() && url.endsWith(".m3u8")) {
-      const hls = new Hls();
-      hls.loadSource(url);
-      hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, function () {
-        video.play();
-      });
-    } else {
-      // For .mp4, .mkv (if browser supports it), etc.
-      video.src = url;
-      video.play();
-    }
-  }
-
-  fetchM3U();
-</script>
+  <h1>Download Hanime M3U Playlist</h1>
+  <a href="/playlist/all" class="button" download>Download M3U</a>
 </body>
 </html>
